@@ -1,37 +1,36 @@
 # loads tidy train or test data set
 loadDataSet <- function(xFile, yFile) {
-    # load list of all features
+    # load list of all features from features.txt
     featureNames <- as.character(read.table("features.txt", stringsAsFactors = F)[, 2])
     
-    # we want to load only std and mean features
+    # we want to load only std and mean features so filter out other
     featuresToLoad <- grepl("std", featureNames) | grepl("mean", featureNames)
     colClassesToLoad <- rep("NULL", times = length(featureNames))
     colClassesToLoad[featuresToLoad] <- "numeric"
     
-    # load data set
-    colNames <- gsub("[\\(|)]", featureNames, replacement = "")
-    colNames <- gsub("-", featureNames, replacement = "_")
-    
-    data <- read.table(xFile, colClasses = colClassesToLoad, 
-                        col.names = colNames)
+    # load measurements data
+    data <- read.table(xFile, colClasses = colClassesToLoad)
+    # set column names
     names(data) <- featureNames[featuresToLoad]
     
-    # load activity labels
+    # load activity labels from activity_labels.txt
     activityLabels <- read.table("activity_labels.txt", col.names = c("ActivityLabelIndex", "ActivityLabel"))
     
     # load activities
-    trainActivities <- read.table(yFile, stringsAsFactors = T
+    activities <- read.table(yFile, stringsAsFactors = T
                                   , colClasses = c("numeric"), col.names = c("ActivityLabelIndex"))
-    trainActivities <- merge(trainActivities, activityLabels, by = "ActivityLabelIndex")[, 2]
         
     # append activities to data set
-    data$Activity <- trainActivities
+    activities <- merge(activities, activityLabels, by = "ActivityLabelIndex")[, 2]
+    data$Activity <- activities
+    
+    # return tidt data set
     data
 }
 
-# load and merge tidy train and test data sets
+# load and merge tidy train and tidy test data sets
 data <- rbind(loadDataSet("train\\X_train.txt", "train\\y_train.txt"), 
                loadDataSet("test\\X_test.txt", "test\\y_test.txt"))
 
 # save tidy data set to tidy.txt
-write.table(data, "tidy.txt", row.names = F)
+write.table(data, "tidy.txt", row.names = F, quote = F)
